@@ -12,8 +12,8 @@ class MedicacaoPagination(PageNumberPagination):
     page_size = 25
 
 
-class MedicacaoViewSet(viewsets.ReadOnlyModelViewSet):  # Mantenha como ReadOnlyModelViewSet
-    queryset = models.Medicacao.objects.all()
+class MedicacaoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = models.Medicacao.objects.order_by('id')  # Ensure ordering
     serializer_class = serializers.MedicacaoSerializer
     pagination_class = MedicacaoPagination
 
@@ -28,19 +28,23 @@ class MedicacaoViewSet(viewsets.ReadOnlyModelViewSet):  # Mantenha como ReadOnly
             openapi.Parameter(
                 'laboratorio', openapi.IN_QUERY, description="Filtra por laboratório", type=openapi.TYPE_STRING
             ),
+            openapi.Parameter(
+                'page', openapi.IN_QUERY, description="Número da página", type=openapi.TYPE_INTEGER
+            ),
         ]
     )
     def list(self, request):
         try:
-            queryset = self.queryset
+            queryset = self.get_queryset()
             if request.query_params:
                 queryset = self.aplicar_filtros(queryset, request.query_params)
             page = self.paginate_queryset(queryset)
             serializer = self.serializer_class(page, many=True)
             return self.get_paginated_response(serializer.data)
+        except APIException as exception:
+            raise exception
         except Exception as exception:
             raise APIException(f"Erro ao listar medicamentos: {str(exception)}")
-
 
     def aplicar_filtros(self, queryset, params):
         substancia = params.get('substancia')
