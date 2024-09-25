@@ -1,0 +1,40 @@
+version: '3'
+
+networks:
+  medicacao-anvisa-network:
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: ./docker-config/db/Dockerfile
+    container_name: medicacao-anvisa-postgres
+    networks:
+      - medicacao-anvisa-network
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: ./docker-config/app/Dockerfile
+    command: sh -c "python manage.py makemigrations &&
+      python manage.py migrate &&
+      python /api-medicamento-anvisa/api_medicamento_anvisa/apps/util/consumer/scriptdepopulacao.py &&
+      python manage.py runserver 0.0.0.0:8000"
+    container_name: api-medicamento-anvisa
+    networks:
+      - medicacao-anvisa-network
+    volumes:
+      - .:/api-medicamento-anvisa
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    restart: always
+
+volumes:
+  postgres_data:

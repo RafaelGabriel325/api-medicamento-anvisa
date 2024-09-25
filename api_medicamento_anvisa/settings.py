@@ -86,7 +86,7 @@ DATABASES = {
         'NAME': 'medicacao_anvisa',
         'USER': 'postgres',
         'PASSWORD': 'root',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
